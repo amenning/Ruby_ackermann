@@ -90,6 +90,8 @@
     
     <li ><a href="#method-i-is_special_case-3F">#is_special_case?</a>
     
+    <li ><a href="#method-i-previous_results_hash">#previous_results_hash</a>
+    
     <li ><a href="#method-i-return_previous_result">#return_previous_result</a>
     
     <li ><a href="#method-i-select_nested_array">#select_nested_array</a>
@@ -121,11 +123,11 @@ primitive recursive.”</p>
 
 <p>A(m,n) =</p>
 <ul><li>
-<p>n+1                                 if m = 0</p>
+<p>n+1                                  if m = 0</p>
 </li><li>
-<p>A(m-1, 1)                   if m &gt; 0 and n = 0</p>
+<p>A(m-1, 1)                    if m &gt; 0 and n = 0</p>
 </li><li>
-<p>A(m-1, A(m, n-1))   if m &gt; 0 and n &gt; 0</p>
+<p>A(m-1, A(m, n-1))    if m &gt; 0 and n &gt; 0</p>
 </li></ul>
 
 <p>The methods below are also implemenented with the following constraints:</p>
@@ -150,18 +152,31 @@ integer. For example:</p>
 
 <p>This would be evaluated as follows:</p>
 <ol><li>
-<p>[1,1]     #This is defined to have nested array dimension of 1</p>
+<p>[1,1]      #This is defined to have nested array dimension of 0</p>
 </li><li>
-<p>[0,[1,0]] #Note this nested array is defined to have nested dimension of 2;
+<p>[0,[1,0]] #Note this nested array is defined to have nested dimension of 1;
 the working array [1,0] would be evaluted next</p>
 </li><li>
-<p>[0,[0,1]] #This still has a nested dimension of 2; the working array [0,1]
+<p>[0,[0,1]] #This still has a nested dimension of 1; the working array [0,1]
 would be evaluted next</p>
 </li><li>
 <p>[0,2]</p>
 </li><li>
 <p>3</p>
 </li></ol>
+
+<p>Avoiding the use of recursive function calls is benefical as this prevents
+SystemStackError of the stack level becoming too deep In addition, the
+avoidance of recrusive function calls could all this method to be modified
+to allow for pausing a calculation and returning later</p>
+
+<p>By saving previously calculated <a href="Ackermann.html">Ackermann</a>
+results, this will optimize future attempts to calculate the same results
+by only requiring a single hash lookup in a single interation</p>
+
+<p>Since there are special cases where n = 0 and m is 0-3, this also optimizes
+these <a href="Ackermann.html">Ackermann</a> indexes and avoides uncessasry
+iterations</p>
 <dl class="rdoc-list note-list"><dt>Author
 <dd>
 <p>Carl Andrew Menning</p>
@@ -209,30 +224,31 @@ would be evaluted next</p>
           
           <p>The initialize method creates an instance hash to store pending solved
 ackermann results called @pending_results_hash</p>
+
+<p><strong>Args</strong>          :</p>
 <ul><li>
-<p><strong>Args</strong>       :</p>
+<p>no Arguments</p>
+</li></ul>
 
-<pre>- no Arguments</pre>
-</li><li>
 <p><strong>Returns</strong> :</p>
+<ul><li>
+<p>new <a href="Ackermann.html">Ackermann</a> instance object</p>
+</li></ul>
 
-<pre>- new Ackermann instance object</pre>
-</li><li>
 <p><strong>Raises</strong>  :</p>
-
-<pre class="ruby"><span class="ruby-constant">This</span> <span class="ruby-identifier">method</span> <span class="ruby-identifier">has</span> <span class="ruby-identifier">no</span> <span class="ruby-identifier">additional</span> <span class="ruby-identifier">errors</span>
-</pre>
+<ul><li>
+<p>This method contains no additional error checks</p>
 </li></ul>
           
           
 
           
           <div class="method-source-code" id="new-source">
-            <pre><span class="ruby-comment"># File ackermann.rb, line 62</span>
+            <pre><span class="ruby-comment"># File ackermann.rb, line 69</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize</span>
         <span class="ruby-comment">#Instance variable that stores pending Ackermann indexes [m,n] for new Ackermann(m,n) values</span>
         <span class="ruby-comment">#The key is the specified dimensional level of the overall Ackermann nested array being evaluated</span>
-        <span class="ruby-comment">#The value is the associated Ackermann index array [m,n]</span>
+        <span class="ruby-comment">#The value is the associated Ackermann index array(s) [[m,n]]</span>
         <span class="ruby-ivar">@pending_results_hash</span> = {}
 <span class="ruby-keyword">end</span></pre>
           </div>
@@ -271,34 +287,42 @@ href="Ackermann.html#method-i-ackermann_function">#ackermann_function</a>
 method is the brute force implementation of the ackermann function The
 ackermann function is defined as A(m,n) =</p>
 <ul><li>
-<p>n+1                                        if m = 0</p>
+<p>n+1                                 if m = 0</p>
 </li><li>
-<p>A(m-1, 1)                  if m &gt; 0 and n = 0</p>
+<p>A(m-1, 1)                   if m &gt; 0 and n = 0</p>
 </li><li>
-<p>A(m-1, A(m, n-1))  if m &gt; 0 and n &gt; 0</p>
-</li><li>
-<p><strong>Args</strong>       :</p>
+<p>A(m-1, A(m, n-1))   if m &gt; 0 and n &gt; 0</p>
+</li></ul>
 
-<pre>- +m+ -&gt; first integer parameter for the ackermann function
-- +n+ -&gt; second integer parameter for the ackermann function</pre>
+<p><strong>Args</strong>          :</p>
+<ul><li>
+<p><code>m</code> -&gt; first integer parameter for the ackermann function</p>
 </li><li>
+<p><code>n</code> -&gt; second integer parameter for the ackermann function</p>
+</li></ul>
+
 <p><strong>Returns</strong> :</p>
-
-<pre>- integer (n+1) if m = 0
-- array [m-1,1] if n = 0
-- nested array [m-1, [m, n-1]] if m &gt; 0 and n &gt; 0</pre>
+<ul><li>
+<p>integer (n+1) if m = 0</p>
 </li><li>
-<p><strong>Raises</strong>  :</p>
+<p>array [m-1,1] if n = 0</p>
+</li><li>
+<p>nested array [m-1, [m, n-1]] if m &gt; 0 and n &gt; 0</p>
+</li></ul>
 
-<pre>- +ArgumentError+ -&gt; if input &quot;m&quot; or &quot;n&quot; is not of type Fixnum or Bignum
-- +RangeError+ -&gt; if input &quot;m&quot; or &quot;n&quot; is not &gt;= 0</pre>
+<p><strong>Raises</strong>  :</p>
+<ul><li>
+<p><code>ArgumentError</code> -&gt; if input “m” or “n” is not of type Fixnum
+or Bignum</p>
+</li><li>
+<p><code>RangeError</code> -&gt; if input “m” or “n” is not &gt;= 0</p>
 </li></ul>
           
           
 
           
           <div class="method-source-code" id="ackermann_function-source">
-            <pre><span class="ruby-comment"># File ackermann.rb, line 166</span>
+            <pre><span class="ruby-comment"># File ackermann.rb, line 171</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">ackermann_function</span>(<span class="ruby-identifier">m</span>, <span class="ruby-identifier">n</span>)
         <span class="ruby-comment"># Check if m and n are of type Fixnum or Bignum, otherwise raise ArgumentError</span>
         <span class="ruby-keyword">if</span> <span class="ruby-operator">!</span>((<span class="ruby-identifier">m</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Fixnum</span>) <span class="ruby-operator">||</span> <span class="ruby-identifier">m</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Bignum</span>)) <span class="ruby-operator">&amp;&amp;</span> (<span class="ruby-identifier">n</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Fixnum</span>) <span class="ruby-operator">||</span> <span class="ruby-identifier">n</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Bignum</span>)))
@@ -330,7 +354,7 @@ ackermann function is defined as A(m,n) =</p>
         
         <div class="method-heading">
           <span class="method-name">define_new_result</span><span
-            class="method-args">(nested_array_dimension, ackermann_index_array, new_result)</span>
+            class="method-args">(nested_array_dimension, new_result)</span>
           
           <span class="method-click-advice">click to toggle source</span>
           
@@ -344,32 +368,37 @@ href="Ackermann.html#method-i-define_new_result">#define_new_result</a>
 method is intended to store a final new integer result for a previously
 pending ackerman index array.  It deletes the ackerman index array from the
 pending @pending_results_hash  instance variable and stores the new result
-in the class variable @@store_cases_results_hash</p>
+in the class variable @@previous_results_hash</p>
+
+<p><strong>Args</strong>          :</p>
 <ul><li>
-<p><strong>Args</strong>       :</p>
-
-<pre>- +nested_array_dimension+ -&gt; dimension of the overall Ackermann nested array
-- +ackermann_index_array+ -&gt; array containing ackermann integer indexes [m,n]
-- +new_result+ -&gt; final integer value to be associated with Ackermann index array</pre>
+<p><code>nested_array_dimension</code> -&gt; dimension of the overall <a
+href="Ackermann.html">Ackermann</a> nested array</p>
 </li><li>
+<p><code>new_result</code> -&gt; final integer value to be associated with <a
+href="Ackermann.html">Ackermann</a> index array</p>
+</li></ul>
+
 <p><strong>Returns</strong> :</p>
+<ul><li>
+<p>true if no error is encountered</p>
+</li></ul>
 
-<pre class="ruby"><span class="ruby-operator">-</span> <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">no</span> <span class="ruby-identifier">error</span> <span class="ruby-identifier">is</span> <span class="ruby-identifier">encountered</span>
-</pre>
-</li><li>
 <p><strong>Raises</strong>  :</p>
-
-<pre>- This method contains no additional errors</pre>
+<ul><li>
+<p>This method contains no additional error checks</p>
 </li></ul>
           
           
 
           
           <div class="method-source-code" id="define_new_result-source">
-            <pre><span class="ruby-comment"># File ackermann.rb, line 293</span>
-<span class="ruby-keyword">def</span> <span class="ruby-identifier">define_new_result</span>(<span class="ruby-identifier">nested_array_dimension</span>, <span class="ruby-identifier">ackermann_index_array</span>, <span class="ruby-identifier">new_result</span>)
+            <pre><span class="ruby-comment"># File ackermann.rb, line 301</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">define_new_result</span>(<span class="ruby-identifier">nested_array_dimension</span>, <span class="ruby-identifier">new_result</span>)
+        <span class="ruby-ivar">@pending_results_hash</span>[<span class="ruby-identifier">nested_array_dimension</span>].<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">m</span>, <span class="ruby-identifier">n</span><span class="ruby-operator">|</span>
+                <span class="ruby-identifier">@@previous_results_hash</span>[[<span class="ruby-identifier">m</span>,<span class="ruby-identifier">n</span>]] = <span class="ruby-identifier">new_result</span>
+        <span class="ruby-keyword">end</span>
         <span class="ruby-ivar">@pending_results_hash</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">nested_array_dimension</span>)
-        <span class="ruby-identifier">@@store_cases_results_hash</span>[<span class="ruby-identifier">ackermann_index_array</span>] = <span class="ruby-identifier">new_result</span>
         <span class="ruby-keyword">return</span> <span class="ruby-keyword">true</span>
 <span class="ruby-keyword">end</span></pre>
           </div>
@@ -398,37 +427,38 @@ in the class variable @@store_cases_results_hash</p>
           <p>The evaluate method is the main method used to calculate the final integer
 value of a given <a href="Ackermann.html">Ackermann</a> index. For example,
 A(1,1) would result in 3.</p>
+
+<p><strong>Args</strong>          :</p>
 <ul><li>
-<p><strong>Args</strong>       :</p>
-
-<pre>- +m+ -&gt; first integer parameter for the ackermann function
-- +n+ -&gt; second integer parameter for the ackermann function</pre>
+<p><code>m</code> -&gt; first integer parameter for the ackermann function</p>
 </li><li>
+<p><code>n</code> -&gt; second integer parameter for the ackermann function</p>
+</li></ul>
+
 <p><strong>Returns</strong> :</p>
+<ul><li>
+<p>final integer solution to <a href="Ackermann.html">Ackermann</a> function</p>
+</li></ul>
 
-<pre>- final integer solution to Ackermann function</pre>
-</li><li>
 <p><strong>Raises</strong>  :</p>
-
-<pre class="ruby"><span class="ruby-operator">-</span> <span class="ruby-constant">RangeError</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">integer</span> <span class="ruby-identifier">solution</span> <span class="ruby-identifier">grows</span> <span class="ruby-identifier">too</span> <span class="ruby-identifier">large</span>
-</pre>
+<ul><li>
+<p>RangeError if integer solution grows too large</p>
 </li></ul>
           
           
 
           
           <div class="method-source-code" id="evaluate-source">
-            <pre><span class="ruby-comment"># File ackermann.rb, line 79</span>
+            <pre><span class="ruby-comment"># File ackermann.rb, line 86</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">evaluate</span>(<span class="ruby-identifier">m</span>, <span class="ruby-identifier">n</span>)
         <span class="ruby-comment">#Set dimensional level of nested array to 1</span>
-        <span class="ruby-identifier">dimension_of_nested_array</span> = <span class="ruby-value">1</span>
+        <span class="ruby-identifier">dimension_of_nested_array</span> = <span class="ruby-value">0</span>
         <span class="ruby-comment">#Create overall total array to be monitored</span>
-        <span class="ruby-identifier">total_array</span> = [<span class="ruby-identifier">m</span>, <span class="ruby-identifier">n</span>]          
-        <span class="ruby-comment">#While dimension of nested arrays is &gt; 0 (i.e. not an integer), continue loop</span>
-        <span class="ruby-keyword">while</span> <span class="ruby-identifier">dimension_of_nested_array</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span> <span class="ruby-keyword">do</span>
+        <span class="ruby-identifier">total_array</span> = [<span class="ruby-identifier">m</span>, <span class="ruby-identifier">n</span>]
+        <span class="ruby-comment">#While dimension of nested arrays is &gt;= 0 (i.e. not an integer), continue loop</span>
+        <span class="ruby-keyword">while</span> <span class="ruby-identifier">dimension_of_nested_array</span> <span class="ruby-operator">&gt;=</span> <span class="ruby-value">0</span> <span class="ruby-keyword">do</span>
                 <span class="ruby-comment"># 1. Set working array containing only integers to be evaluated</span>
                 <span class="ruby-identifier">working_array</span> = <span class="ruby-identifier">select_nested_array</span>(<span class="ruby-identifier">total_array</span>, <span class="ruby-identifier">dimension_of_nested_array</span>)
-                
                 <span class="ruby-comment"># 2. Check if current Ackermann indexes have been solved before; if not, mark indexes as pending final integer result</span>
                 <span class="ruby-keyword">if</span> (<span class="ruby-operator">!</span><span class="ruby-identifier">is_previous_result?</span>(<span class="ruby-identifier">working_array</span>))
                         <span class="ruby-comment">#Store new result in pending_results_hash using current dimension of nested array as key and current Ackermann indexes as the value</span>
@@ -436,7 +466,7 @@ A(1,1) would result in 3.</p>
                 <span class="ruby-keyword">end</span>
                 
                 <span class="ruby-comment"># 3. Calculate result using following order</span>
-                <span class="ruby-comment"># 3a. Return previously calculated result if stored in @@store_cases_results_hash</span>
+                <span class="ruby-comment"># 3a. Return previously calculated result if stored in @@previous_results_hash</span>
                 <span class="ruby-keyword">if</span> (<span class="ruby-identifier">is_previous_result?</span>(<span class="ruby-identifier">working_array</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">return_previous_result</span>(<span class="ruby-identifier">working_array</span>)<span class="ruby-operator">!=</span><span class="ruby-keyword">nil</span>)
                         <span class="ruby-identifier">return_result</span> = <span class="ruby-identifier">return_previous_result</span>(<span class="ruby-identifier">working_array</span>)
                 <span class="ruby-comment"># 3b. Return result if part of special cases where m is equal to 0-3</span>
@@ -466,17 +496,16 @@ A(1,1) would result in 3.</p>
                         <span class="ruby-identifier">working_array</span>[<span class="ruby-value">1</span>] = <span class="ruby-identifier">return_result</span>[<span class="ruby-value">1</span>]
                 
                 <span class="ruby-comment"># If return result has collapsed to an integer value, store new result if listed as pending and adjust dimension of overall nested array</span>
-                <span class="ruby-keyword">else</span>
-                        
+                <span class="ruby-keyword">else</span>                         
                         <span class="ruby-keyword">if</span> <span class="ruby-identifier">is_pending_result?</span>(<span class="ruby-identifier">dimension_of_nested_array</span>)
                                 <span class="ruby-identifier">pending_result_array</span> = <span class="ruby-identifier">get_pending_array</span>(<span class="ruby-identifier">dimension_of_nested_array</span>)
-                                <span class="ruby-identifier">define_new_result</span>(<span class="ruby-identifier">dimension_of_nested_array</span>, <span class="ruby-identifier">pending_result_array</span>,<span class="ruby-identifier">return_result</span>)
+                                <span class="ruby-identifier">define_new_result</span>(<span class="ruby-identifier">dimension_of_nested_array</span>, <span class="ruby-identifier">return_result</span>)
                         <span class="ruby-keyword">end</span>
                         
                         <span class="ruby-identifier">dimension_of_nested_array</span> <span class="ruby-operator">-=</span> <span class="ruby-value">1</span>
                         
                         <span class="ruby-comment">#Check if collapsed integer result still is contained within a higher level array or if all arrays have collapsed to a single integer</span>
-                        <span class="ruby-keyword">if</span> <span class="ruby-identifier">dimension_of_nested_array</span> <span class="ruby-operator">&gt;</span><span class="ruby-value">0</span> 
+                        <span class="ruby-keyword">if</span> <span class="ruby-identifier">dimension_of_nested_array</span> <span class="ruby-operator">&gt;=</span> <span class="ruby-value">0</span> 
                                 <span class="ruby-comment">#Adjust working array one level up from current position to select outer array containing the current solution</span>
                                 <span class="ruby-identifier">working_array</span> = <span class="ruby-identifier">select_nested_array</span>(<span class="ruby-identifier">total_array</span>, <span class="ruby-identifier">dimension_of_nested_array</span>)
                                 <span class="ruby-identifier">working_array</span>[<span class="ruby-value">1</span>] = <span class="ruby-identifier">return_result</span>
@@ -517,25 +546,28 @@ href="Ackermann.html#method-i-evaluate_special_case">#evaluate_special_case</a>
 method returns a final integer solution for a pair of <a
 href="Ackermann.html">Ackermann</a> integer indexes (m,n) based on the
 evaluted equation supplied by the @@special_cases_hash</p>
+
+<p><strong>Args</strong>          :</p>
 <ul><li>
-<p><strong>Args</strong>       :</p>
+<p><code>ackermann_index_array</code> -&gt; array containing ackermann integer
+indexes [m,n]</p>
+</li></ul>
 
-<pre>- +ackermann_index_array+ -&gt; array containing ackermann integer indexes [m,n]</pre>
-</li><li>
 <p><strong>Returns</strong> :</p>
+<ul><li>
+<p>integer value for evaluated special cases</p>
+</li></ul>
 
-<pre>- integer value for evaluated special cases</pre>
-</li><li>
 <p><strong>Raises</strong>  :</p>
-
-<pre>- This method contains no additional errors</pre>
+<ul><li>
+<p>This method contains no additional error checks</p>
 </li></ul>
           
           
 
           
           <div class="method-source-code" id="evaluate_special_case-source">
-            <pre><span class="ruby-comment"># File ackermann.rb, line 226</span>
+            <pre><span class="ruby-comment"># File ackermann.rb, line 231</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">evaluate_special_case</span>(<span class="ruby-identifier">ackermann_index_array</span>)
         <span class="ruby-comment"># assigned first local Ackermann index m</span>
         <span class="ruby-identifier">m</span> = <span class="ruby-identifier">ackermann_index_array</span>[<span class="ruby-value">0</span>]
@@ -574,25 +606,28 @@ href="Ackermann.html#method-i-get_pending_array">#get_pending_array</a>
 method returns the <a href="Ackermann.html">Ackermann</a> indexes as an
 array [m,n] that corresponds to the assigned pending nested array dimension
 of the overall <a href="Ackermann.html">Ackermann</a> nested array</p>
+
+<p><strong>Args</strong>          :</p>
 <ul><li>
-<p><strong>Args</strong>       :</p>
+<p><code>nested_array_dimension</code> -&gt; dimension of the overall <a
+href="Ackermann.html">Ackermann</a> nested array</p>
+</li></ul>
 
-<pre>- +nested_array_dimension+ -&gt; dimension of the overall Ackermann nested array</pre>
-</li><li>
 <p><strong>Returns</strong> :</p>
+<ul><li>
+<p>array with <a href="Ackermann.html">Ackermann</a> indexes [m,n]</p>
+</li></ul>
 
-<pre>- array with Ackermann indexes [m,n]</pre>
-</li><li>
 <p><strong>Raises</strong>  :</p>
-
-<pre>- This method contains no additional errors</pre>
+<ul><li>
+<p>This method contains no additional error checks</p>
 </li></ul>
           
           
 
           
           <div class="method-source-code" id="get_pending_array-source">
-            <pre><span class="ruby-comment"># File ackermann.rb, line 260</span>
+            <pre><span class="ruby-comment"># File ackermann.rb, line 265</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">get_pending_array</span>(<span class="ruby-identifier">nested_array_dimension</span>)
         <span class="ruby-keyword">return</span> <span class="ruby-ivar">@pending_results_hash</span>[<span class="ruby-identifier">nested_array_dimension</span>]
 <span class="ruby-keyword">end</span></pre>
@@ -620,26 +655,29 @@ of the overall <a href="Ackermann.html">Ackermann</a> nested array</p>
         <div class="method-description">
           
           <p>The is_infinity? method checks if a value is equal to Float::INFINITY</p>
+
+<p><strong>Args</strong>          :</p>
 <ul><li>
-<p><strong>Args</strong>       :</p>
+<p><code>value</code> -&gt; value to check if equal to Float::INFINITY</p>
+</li></ul>
 
-<pre>- +value+ -&gt; value to check if equal to Float::INFINITY</pre>
-</li><li>
 <p><strong>Returns</strong> :</p>
-
-<pre>- true if value is equal to Float::INFINITY
-- false if value is not equal to Float::INFINITY</pre>
+<ul><li>
+<p>true if value is equal to Float::INFINITY</p>
 </li><li>
-<p><strong>Raises</strong>  :</p>
+<p>false if value is not equal to Float::INFINITY</p>
+</li></ul>
 
-<pre>- This method contains no additional errors</pre>
+<p><strong>Raises</strong>  :</p>
+<ul><li>
+<p>This method contains no additional error checks</p>
 </li></ul>
           
           
 
           
           <div class="method-source-code" id="is_infinity-3F-source">
-            <pre><span class="ruby-comment"># File ackermann.rb, line 336</span>
+            <pre><span class="ruby-comment"># File ackermann.rb, line 346</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">is_infinity?</span>(<span class="ruby-identifier">value</span>)
         <span class="ruby-keyword">return</span> <span class="ruby-identifier">value</span> <span class="ruby-operator">==</span> <span class="ruby-constant">Float</span><span class="ruby-operator">::</span><span class="ruby-constant">INFINITY</span>
 <span class="ruby-keyword">end</span></pre>
@@ -669,26 +707,32 @@ of the overall <a href="Ackermann.html">Ackermann</a> nested array</p>
           <p>The is_pending_result method checks if a pair of <a
 href="Ackermann.html">Ackermann</a> integer indexes (m,n) is  has been
 added to the instance variable @pending_results_hash</p>
+
+<p><strong>Args</strong>          :</p>
 <ul><li>
-<p><strong>Args</strong>       :</p>
+<p><code>nested_array_dimension</code> -&gt; dimension of the overall <a
+href="Ackermann.html">Ackermann</a> nested array</p>
+</li></ul>
 
-<pre>- +nested_array_dimension+ -&gt; dimension of the overall Ackermann nested array</pre>
-</li><li>
 <p><strong>Returns</strong> :</p>
-
-<pre>- true if instance variable @pending_results_hash contains the supplied nested array dimension as a key
-- false if instance variable @pending_results_hash does not contain the supplied nested array dimension as a key</pre>
+<ul><li>
+<p>true if instance variable @pending_results_hash contains the supplied
+nested array dimension as a key</p>
 </li><li>
-<p><strong>Raises</strong>  :</p>
+<p>false if instance variable @pending_results_hash does not contain the
+supplied nested array dimension as a key</p>
+</li></ul>
 
-<pre>- This method contains no additional errors</pre>
+<p><strong>Raises</strong>  :</p>
+<ul><li>
+<p>This method contains no additional error checks</p>
 </li></ul>
           
           
 
           
           <div class="method-source-code" id="is_pending_result-3F-source">
-            <pre><span class="ruby-comment"># File ackermann.rb, line 247</span>
+            <pre><span class="ruby-comment"># File ackermann.rb, line 252</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">is_pending_result?</span>(<span class="ruby-identifier">nested_array_dimension</span>)
         <span class="ruby-keyword">return</span> <span class="ruby-ivar">@pending_results_hash</span>.<span class="ruby-identifier">has_key?</span>(<span class="ruby-identifier">nested_array_dimension</span>)
 <span class="ruby-keyword">end</span></pre>
@@ -716,30 +760,35 @@ added to the instance variable @pending_results_hash</p>
         <div class="method-description">
           
           <p>The is_previous_result? method returns a boolean upon checking if
-@@store_cases_results_hash variable contains a key based on an array of
+@@previous_results_hash variable contains a key based on an array of
 ackermann indexes</p>
+
+<p><strong>Args</strong>          :</p>
 <ul><li>
-<p><strong>Args</strong>       :</p>
+<p><code>ackermann_index_array</code> -&gt; array containing ackermann integer
+indexes [m,n]</p>
+</li></ul>
 
-<pre>- +ackermann_index_array+ -&gt; array containing ackermann integer indexes [m,n]</pre>
-</li><li>
 <p><strong>Returns</strong> :</p>
-
-<pre>- true if ackermann index array key is found in class variable @@store_cases_results_hash
-- false if ackermann index array key is not found</pre>
+<ul><li>
+<p>true if ackermann index array key is found in class variable
+@@previous_results_hash</p>
 </li><li>
-<p><strong>Raises</strong>  :</p>
+<p>false if ackermann index array key is not found</p>
+</li></ul>
 
-<pre>- This method contains no additional errors</pre>
+<p><strong>Raises</strong>  :</p>
+<ul><li>
+<p>This method contains no additional error checks</p>
 </li></ul>
           
           
 
           
           <div class="method-source-code" id="is_previous_result-3F-source">
-            <pre><span class="ruby-comment"># File ackermann.rb, line 309</span>
+            <pre><span class="ruby-comment"># File ackermann.rb, line 319</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">is_previous_result?</span>(<span class="ruby-identifier">ackermann_index_array</span>)
-        <span class="ruby-keyword">return</span> <span class="ruby-identifier">@@store_cases_results_hash</span>.<span class="ruby-identifier">has_key?</span>(<span class="ruby-identifier">ackermann_index_array</span>)
+        <span class="ruby-keyword">return</span> <span class="ruby-identifier">@@previous_results_hash</span>.<span class="ruby-identifier">has_key?</span>(<span class="ruby-identifier">ackermann_index_array</span>)
 <span class="ruby-keyword">end</span></pre>
           </div>
           
@@ -767,28 +816,68 @@ ackermann indexes</p>
           <p>The is_special_case? method checks if a pair of <a
 href="Ackermann.html">Ackermann</a> integer indexes (m,n) has a previously
 calculated final integer result in the class variable @@special_cases_hash</p>
+
+<p><strong>Args</strong>          :</p>
 <ul><li>
-<p><strong>Args</strong>       :</p>
+<p><code>ackermann_index_array</code> -&gt; array containing ackermann integer
+indexes [m,n]</p>
+</li></ul>
 
-<pre>- +ackermann_index_array+ -&gt; array containing ackermann integer indexes [m,n]</pre>
-</li><li>
 <p><strong>Returns</strong> :</p>
-
-<pre>- true if class variable @@special_cases_hash contains the supplied Ackermann indexes
-- false otherwise</pre>
+<ul><li>
+<p>true if class variable @@special_cases_hash contains the supplied <a
+href="Ackermann.html">Ackermann</a> indexes</p>
 </li><li>
-<p><strong>Raises</strong>  :</p>
+<p>false otherwise</p>
+</li></ul>
 
-<pre>- This method contains no additional errors</pre>
+<p><strong>Raises</strong>  :</p>
+<ul><li>
+<p>This method contains no additional error checks</p>
 </li></ul>
           
           
 
           
           <div class="method-source-code" id="is_special_case-3F-source">
-            <pre><span class="ruby-comment"># File ackermann.rb, line 213</span>
+            <pre><span class="ruby-comment"># File ackermann.rb, line 218</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">is_special_case?</span>(<span class="ruby-identifier">ackermann_index_array</span>)
         <span class="ruby-keyword">return</span> <span class="ruby-identifier">@@special_cases_hash</span>.<span class="ruby-identifier">has_key?</span>(<span class="ruby-identifier">ackermann_index_array</span>[<span class="ruby-value">0</span>])
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-previous_results_hash" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">previous_results_hash</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>The <a
+href="Ackermann.html#method-i-previous_results_hash">#previous_results_hash</a>
+method allows access to the class variable of the same name</p>
+          
+          
+
+          
+          <div class="method-source-code" id="previous_results_hash-source">
+            <pre><span class="ruby-comment"># File ackermann.rb, line 351</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">previous_results_hash</span>
+        <span class="ruby-identifier">@@previous_results_hash</span>
 <span class="ruby-keyword">end</span></pre>
           </div>
           
@@ -816,29 +905,34 @@ calculated final integer result in the class variable @@special_cases_hash</p>
           <p>The <a
 href="Ackermann.html#method-i-return_previous_result">#return_previous_result</a>
 method returns a previous solved saved result from the 
-@@store_cases_results_hash variable based on an array of ackermann indexes</p>
+@@previous_results_hash variable based on an array of ackermann indexes</p>
+
+<p><strong>Args</strong>          :</p>
 <ul><li>
-<p><strong>Args</strong>       :</p>
+<p><code>ackermann_index_array</code> -&gt; array containing ackermann integer
+indexes [m,n]</p>
+</li></ul>
 
-<pre>- +ackermann_index_array+ -&gt; array containing ackermann integer indexes [m,n]</pre>
-</li><li>
 <p><strong>Returns</strong> :</p>
-
-<pre>- stored integer value if ackermann index array key is found in class variable @@store_cases_results_hash
-- nil if ackermann index array key is not found</pre>
+<ul><li>
+<p>stored integer value if ackermann index array key is found in class
+variable @@previous_results_hash</p>
 </li><li>
-<p><strong>Raises</strong>  :</p>
+<p>nil if ackermann index array key is not found</p>
+</li></ul>
 
-<pre>- This method contains no additional errors</pre>
+<p><strong>Raises</strong>  :</p>
+<ul><li>
+<p>This method contains no additional error checks</p>
 </li></ul>
           
           
 
           
           <div class="method-source-code" id="return_previous_result-source">
-            <pre><span class="ruby-comment"># File ackermann.rb, line 323</span>
+            <pre><span class="ruby-comment"># File ackermann.rb, line 333</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">return_previous_result</span>(<span class="ruby-identifier">ackermann_index_array</span>)
-        <span class="ruby-keyword">return</span> <span class="ruby-identifier">@@store_cases_results_hash</span>[<span class="ruby-identifier">ackermann_index_array</span>]
+        <span class="ruby-keyword">return</span> <span class="ruby-identifier">@@previous_results_hash</span>[<span class="ruby-identifier">ackermann_index_array</span>]
 <span class="ruby-keyword">end</span></pre>
           </div>
           
@@ -867,29 +961,31 @@ method returns a previous solved saved result from the
 href="Ackermann.html#method-i-select_nested_array">#select_nested_array</a>
 method uses a loop to select the inner most nested array containing only
 integers from the supplied nested array</p>
+
+<p><strong>Args</strong>          :</p>
 <ul><li>
-<p><strong>Args</strong>       :</p>
+<p><code>nested_array</code> -&gt; array containing variable nested arrays</p>
+</li></ul>
 
-<pre>- +nested_array+ -&gt; array containing variable nested arrays</pre>
-</li><li>
 <p><strong>Returns</strong> :</p>
+<ul><li>
+<p>inner most array [m,n] as specified by the desired nested_array_dimension</p>
+</li></ul>
 
-<pre>- inner most array [m,n] as specified by the desired nested_array_dimension</pre>
-</li><li>
 <p><strong>Raises</strong>  :</p>
-
-<pre>- This method contains no additional errors</pre>
+<ul><li>
+<p>This method contains no additional error checks</p>
 </li></ul>
           
           
 
           
           <div class="method-source-code" id="select_nested_array-source">
-            <pre><span class="ruby-comment"># File ackermann.rb, line 193</span>
+            <pre><span class="ruby-comment"># File ackermann.rb, line 198</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">select_nested_array</span>(<span class="ruby-identifier">nested_array</span>, <span class="ruby-identifier">nested_array_dimension</span>)
         <span class="ruby-identifier">return_array_reference</span> = <span class="ruby-identifier">nested_array</span>
         <span class="ruby-comment">#Use for loop to iterate inwards on the 2nd element of each nested array until specified nested array is reached</span>
-        <span class="ruby-keyword">for</span> <span class="ruby-identifier">dimension</span> <span class="ruby-keyword">in</span> <span class="ruby-value">1</span><span class="ruby-operator">..</span>(<span class="ruby-identifier">nested_array_dimension</span><span class="ruby-operator">-</span><span class="ruby-value">1</span>) <span class="ruby-keyword">do</span>
+        <span class="ruby-keyword">for</span> <span class="ruby-identifier">dimension</span> <span class="ruby-keyword">in</span> <span class="ruby-value">0</span><span class="ruby-operator">..</span>(<span class="ruby-identifier">nested_array_dimension</span><span class="ruby-operator">-</span><span class="ruby-value">1</span>) <span class="ruby-keyword">do</span>
                 <span class="ruby-identifier">return_array_reference</span> = <span class="ruby-identifier">return_array_reference</span>[<span class="ruby-value">1</span>]
         <span class="ruby-keyword">end</span>
         <span class="ruby-comment">#Return nested array [m,n]</span>
@@ -926,29 +1022,37 @@ href="Ackermann.html">Ackermann</a> nested array being evaluated.  This
 will store the new ackermann index array [m,n] as a value associated with
 the key being the specified nested array dimension in the instance variable
 @pending_results_hash.</p>
+
+<p><strong>Args</strong>          :</p>
 <ul><li>
-<p><strong>Args</strong>       :</p>
-
-<pre>- +ackermann_index_array+ -&gt; array containing ackermann integer indexes [m,n]
-- +mark_dimension_to_save+ -&gt; specified dimensonal level of overall Ackermann nested array being evaluated</pre>
+<p><code>ackermann_index_array</code> -&gt; array containing ackermann integer
+indexes [m,n]</p>
 </li><li>
+<p><code>mark_dimension_to_save</code> -&gt; specified dimensonal level of
+overall <a href="Ackermann.html">Ackermann</a> nested array being evaluated</p>
+</li></ul>
+
 <p><strong>Returns</strong> :</p>
+<ul><li>
+<p>true if no error is encountered</p>
+</li></ul>
 
-<pre class="ruby"><span class="ruby-operator">-</span> <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">no</span> <span class="ruby-identifier">error</span> <span class="ruby-identifier">is</span> <span class="ruby-identifier">encountered</span>
-</pre>
-</li><li>
 <p><strong>Raises</strong>  :</p>
-
-<pre>- This method contains no additional errors</pre>
+<ul><li>
+<p>This method contains no additional error checks</p>
 </li></ul>
           
           
 
           
           <div class="method-source-code" id="store_new_pending_result-source">
-            <pre><span class="ruby-comment"># File ackermann.rb, line 276</span>
+            <pre><span class="ruby-comment"># File ackermann.rb, line 281</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">store_new_pending_result</span>(<span class="ruby-identifier">ackermann_index_array</span>, <span class="ruby-identifier">mark_dimension_to_save</span>)
-        <span class="ruby-ivar">@pending_results_hash</span>[<span class="ruby-identifier">mark_dimension_to_save</span>] = <span class="ruby-identifier">ackermann_index_array</span>
+        <span class="ruby-keyword">if</span> <span class="ruby-ivar">@pending_results_hash</span>[<span class="ruby-identifier">mark_dimension_to_save</span>] <span class="ruby-operator">!=</span> <span class="ruby-keyword">nil</span>
+                <span class="ruby-ivar">@pending_results_hash</span>[<span class="ruby-identifier">mark_dimension_to_save</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">ackermann_index_array</span>
+        <span class="ruby-keyword">else</span>
+                <span class="ruby-ivar">@pending_results_hash</span>[<span class="ruby-identifier">mark_dimension_to_save</span>] = [<span class="ruby-identifier">ackermann_index_array</span>]
+        <span class="ruby-keyword">end</span>
         <span class="ruby-keyword">return</span> <span class="ruby-keyword">true</span>
 <span class="ruby-keyword">end</span></pre>
           </div>
