@@ -48,7 +48,7 @@ class Ackermann
 	#instances of the Ackermann class
 	#The key is the Ackermann index array [m,n]
 	#The value is the overall final integer value associated with A(m,n)
-	@@store_cases_results_hash = {}
+	@@previous_results_hash = {}
 
 	# The initialize method creates an instance hash to store pending solved ackermann results
 	# called @pending_results_hash
@@ -93,7 +93,7 @@ class Ackermann
 			end
 			
 			# 3. Calculate result using following order
-			# 3a. Return previously calculated result if stored in @@store_cases_results_hash
+			# 3a. Return previously calculated result if stored in @@previous_results_hash
 			if (is_previous_result?(working_array) && return_previous_result(working_array)!=nil)
 				return_result = return_previous_result(working_array)
 			# 3b. Return result if part of special cases where m is equal to 0-3
@@ -280,7 +280,7 @@ class Ackermann
 
 	# The define_new_result method is intended to store a final new integer result for a previously
 	# pending ackerman index array.  It deletes the ackerman index array from the pending @pending_results_hash 
-	# instance variable and stores the new result in the class variable @@store_cases_results_hash
+	# instance variable and stores the new result in the class variable @@previous_results_hash
 	#
 	# * *Args*	  :
 	#	- +nested_array_dimension+ -> dimension of the overall Ackermann nested array
@@ -292,36 +292,36 @@ class Ackermann
 	#	- This method contains no additional errors		
 	def define_new_result(nested_array_dimension, ackermann_index_array, new_result)
 		@pending_results_hash.delete(nested_array_dimension)
-		@@store_cases_results_hash[ackermann_index_array] = new_result
+		@@previous_results_hash[ackermann_index_array] = new_result
 		return true
 	end		
 
 	# The is_previous_result? method returns a boolean upon checking if
-	# @@store_cases_results_hash variable contains a key based on an array of ackermann indexes
+	# @@previous_results_hash variable contains a key based on an array of ackermann indexes
 	#
 	# * *Args*	  :
 	#	- +ackermann_index_array+ -> array containing ackermann integer indexes [m,n]
 	# * *Returns* :
-	#	- true if ackermann index array key is found in class variable @@store_cases_results_hash
+	#	- true if ackermann index array key is found in class variable @@previous_results_hash
 	#	- false if ackermann index array key is not found
 	# * *Raises*  :
 	#	- This method contains no additional errors	
 	def is_previous_result?(ackermann_index_array)
-		return @@store_cases_results_hash.has_key?(ackermann_index_array)
+		return @@previous_results_hash.has_key?(ackermann_index_array)
 	end
 
 	# The return_previous_result method returns a previous solved saved result from the 
-	# @@store_cases_results_hash variable based on an array of ackermann indexes
+	# @@previous_results_hash variable based on an array of ackermann indexes
 	#
 	# * *Args*	  :
 	#	- +ackermann_index_array+ -> array containing ackermann integer indexes [m,n]
 	# * *Returns* :
-	#	- stored integer value if ackermann index array key is found in class variable @@store_cases_results_hash
+	#	- stored integer value if ackermann index array key is found in class variable @@previous_results_hash
 	#	- nil if ackermann index array key is not found
 	# * *Raises*  :
 	#	- This method contains no additional errors	
 	def return_previous_result(ackermann_index_array)
-		return @@store_cases_results_hash[ackermann_index_array]
+		return @@previous_results_hash[ackermann_index_array]
 	end	
 	
 	# The is_infinity? method checks if a value is equal to Float::INFINITY
