@@ -21,16 +21,23 @@
 # until the entire nested array collapses into a single Fixnum or Bignum integer. For example:
 # - A(1,1) can be written as [1,1]
 # This would be evaluated as follows:
-# 1. \[1,1] 	#This is defined to have nested array dimension of 1
-# 2. \[0,[1,0]] #Note this nested array is defined to have nested dimension of 2; the working array [1,0] would be evaluted next
-# 3. \[0,[0,1]] #This still has a nested dimension of 2; the working array [0,1] would be evaluted next
+# 1. \[1,1] 	#This is defined to have nested array dimension of 0
+# 2. \[0,[1,0]] #Note this nested array is defined to have nested dimension of 1; the working array [1,0] would be evaluted next
+# 3. \[0,[0,1]] #This still has a nested dimension of 1; the working array [0,1] would be evaluted next
 # 4. \[0,2]
 # 5. 3
+#
+# Avoiding the use of recursive function calls is benefical as this prevents SystemStackError of the stack level becoming too deep
+# In addition, the avoidance of recrusive function calls could all this method to be modified to allow for pausing a calculation and returning later
+# 
+# By saving previously calculated Ackermann results, this will optimize future attempts to calculate the same results by only requiring a single hash lookup in a single interation
+#
+# Since there are special cases where n = 0 and m is 0-3, this also optimizes these Ackermann indexes and avoides uncessasry iterations
 #
 # Author::		Carl Andrew Menning 
 # Version::		0.0.1
 # License::		Distributed under the same terms as Ruby
-class Ackermann
+class Ackermann	
 	#Class variable that stores optimized functinos for low values of m as defined
 	#at Wolfram Mathworld (http://mathworld.wolfram.com/AckermannFunction.html)
 	#This hash contain keys as defined of interger values of the first ackermann 
@@ -62,7 +69,7 @@ class Ackermann
 	def initialize
 		#Instance variable that stores pending Ackermann indexes [m,n] for new Ackermann(m,n) values
 		#The key is the specified dimensional level of the overall Ackermann nested array being evaluated
-		#The value is the associated Ackermann index array [m,n]
+		#The value is the associated Ackermann index array(s) [[m,n]]
 		@pending_results_hash = {}
 	end
 	
@@ -78,14 +85,13 @@ class Ackermann
 	#	- RangeError if integer solution grows too large
 	def evaluate(m, n)
 		#Set dimensional level of nested array to 1
-		dimension_of_nested_array = 1
+		dimension_of_nested_array = 0
 		#Create overall total array to be monitored
-		total_array = [m, n]		
-		#While dimension of nested arrays is > 0 (i.e. not an integer), continue loop
-		while dimension_of_nested_array > 0 do
+		total_array = [m, n]
+		#While dimension of nested arrays is >= 0 (i.e. not an integer), continue loop
+		while dimension_of_nested_array >= 0 do
 			# 1. Set working array containing only integers to be evaluated
 			working_array = select_nested_array(total_array, dimension_of_nested_array)
-			
 			# 2. Check if current Ackermann indexes have been solved before; if not, mark indexes as pending final integer result
 			if (!is_previous_result?(working_array))
 				#Store new result in pending_results_hash using current dimension of nested array as key and current Ackermann indexes as the value
@@ -123,17 +129,16 @@ class Ackermann
 				working_array[1] = return_result[1]
 			
 			# If return result has collapsed to an integer value, store new result if listed as pending and adjust dimension of overall nested array
-			else
-				
+			else				
 				if is_pending_result?(dimension_of_nested_array)
 					pending_result_array = get_pending_array(dimension_of_nested_array)
-					define_new_result(dimension_of_nested_array, pending_result_array,return_result)
+					define_new_result(dimension_of_nested_array, return_result)
 				end
 				
 				dimension_of_nested_array -= 1
 				
 				#Check if collapsed integer result still is contained within a higher level array or if all arrays have collapsed to a single integer
-				if dimension_of_nested_array >0 
+				if dimension_of_nested_array >= 0 
 					#Adjust working array one level up from current position to select outer array containing the current solution
 					working_array = select_nested_array(total_array, dimension_of_nested_array)
 					working_array[1] = return_result
@@ -193,7 +198,7 @@ class Ackermann
 	def select_nested_array(nested_array, nested_array_dimension)
 		return_array_reference = nested_array
 		#Use for loop to iterate inwards on the 2nd element of each nested array until specified nested array is reached
-		for dimension in 1..(nested_array_dimension-1) do
+		for dimension in 0..(nested_array_dimension-1) do
 			return_array_reference = return_array_reference[1]
 		end
 		#Return nested array [m,n]
@@ -274,7 +279,11 @@ class Ackermann
 	# * *Raises*  :
 	#	- This method contains no additional errors		
 	def store_new_pending_result(ackermann_index_array, mark_dimension_to_save)
-		@pending_results_hash[mark_dimension_to_save] = ackermann_index_array
+		if @pending_results_hash[mark_dimension_to_save] != nil
+			@pending_results_hash[mark_dimension_to_save] << ackermann_index_array
+		else
+			@pending_results_hash[mark_dimension_to_save] = [ackermann_index_array]
+		end
 		return true
 	end
 
@@ -284,15 +293,16 @@ class Ackermann
 	#
 	# * *Args*	  :
 	#	- +nested_array_dimension+ -> dimension of the overall Ackermann nested array
-	#	- +ackermann_index_array+ -> array containing ackermann integer indexes [m,n]
 	#	- +new_result+ -> final integer value to be associated with Ackermann index array
 	# * *Returns* :
 	#	- true if no error is encountered
 	# * *Raises*  :
 	#	- This method contains no additional errors		
-	def define_new_result(nested_array_dimension, ackermann_index_array, new_result)
+	def define_new_result(nested_array_dimension, new_result)
+		@pending_results_hash[nested_array_dimension].each do |m, n|
+			@@previous_results_hash[[m,n]] = new_result
+		end
 		@pending_results_hash.delete(nested_array_dimension)
-		@@previous_results_hash[ackermann_index_array] = new_result
 		return true
 	end		
 
@@ -335,5 +345,10 @@ class Ackermann
 	#	- This method contains no additional errors
 	def is_infinity?(value)
 		return value == Float::INFINITY
+	end
+	
+	# The previous_results_hash method allows access to the class variable of the same name
+	def previous_results_hash
+		@@previous_results_hash
 	end
 end
