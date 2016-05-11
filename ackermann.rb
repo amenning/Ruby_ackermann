@@ -16,23 +16,23 @@
 #- that optimizes low values of m as special cases
 #- without using recursive function calls"
 #
-#This version avoids recursive function calls by using a nested multidimensional arrays.
-#Each loop works on the inner most nested 2D array as the indexes for the Ackermann function 
-#until the entire nested array collapses into a single Fixnum or Bignum integer. For example:
+#This version avoids recursive function calls by using nested multidimensional arrays.
+#Each loop works on the inner most nested array as the indexes for the Ackermann function 
+#until the entire overall nested array collapses into a single Fixnum or Bignum integer. For example:
 #- A(1,1) can be written as [1,1]
 #This would be evaluated as follows:
 #1. \[1,1] 	#This is defined to have nested array dimension of 0
-#2. \[0,[1,0]] #Note this nested array is defined to have nested dimension of 1; the working array [1,0] would be evaluted next
-#3. \[0,[0,1]] #This still has a nested dimension of 1; the working array [0,1] would be evaluted next
+#2. \[0,[1,0]] #Note this nested array is defined to have nested dimension of 1; the working array [1,0] would be evaluated next
+#3. \[0,[0,1]] #This still has a nested dimension of 1; the working array [0,1] would be evaluated next
 #4. \[0,2]
 #5. 3
 #
-#Avoiding the use of recursive function calls is benefical as this prevents SystemStackError of the stack level becoming too deep
+#Avoiding the use of recursive function calls is benefical as this prevents SystemStackError of the stack level becoming too deep.
 #In addition, the avoidance of recrusive function calls could all this method to be modified to allow for pausing a calculation and returning later
 # 
-#By saving previously calculated Ackermann results, this will optimize future attempts to calculate the same results by only requiring a single hash lookup in a single interation
+#By saving previously calculated Ackermann results, this will optimize future attempts to calculate the same results by only requiring a single hash lookup in a single iteration
 #
-#Since there are special cases where n = 0 and m is 0-3, this also optimizes these Ackermann indexes and avoides uncessasry iterations
+#This class also contains special cases when m is 0-3 and uses a simplified formula when this is encountered; this also optimizes these Ackermann indexes and avoids unnecessary iterations
 #
 #Author::		Carl Andrew Menning 
 #Version::		0.0.1
@@ -40,7 +40,7 @@
 class Ackermann	
 	#Class variable that stores optimized functinos for low values of m as defined
 	#at Wolfram Mathworld (http://mathworld.wolfram.com/AckermannFunction.html)
-	#This hash contain keys as defined of interger values of the first ackermann 
+	#This hash contain keys as defined by interger values of the first ackermann 
 	#parameter "m" and returns a string with the expression to be evaluated based 
 	#on the second paramter "n".  This can be evaulated using eval() with a previously
 	#defined local variable "n" value. 
@@ -51,13 +51,13 @@ class Ackermann
 		3 => '2**(n+3)-3'
 	}
 	
-	#Class variable that stores previously calculated results to be used first and available for any
+	#Class variable that stores previously calculated results to be used first and these are available for any
 	#instances of the Ackermann class
 	#The key is the Ackermann index array [m,n]
 	#The value is the overall final integer value associated with A(m,n)
 	@@previous_results_hash = {}
 
-	#The initialize method creates an instance hash to store pending solved ackermann results
+	#The initialize method creates an instance hash to store pending ackermann solutions
 	#called @pending_results_hash
 	#
 	#*Args*	  :
@@ -67,7 +67,7 @@ class Ackermann
 	#*Raises*  :
 	#- This method contains no additional error checks
 	def initialize
-		#Instance variable that stores pending Ackermann indexes [m,n] for new Ackermann(m,n) values
+		#Instance variable that stores pending Ackermann indexes [m,n] for new Ackermann(m,n) solutions
 		#The key is the specified dimensional level of the overall Ackermann nested array being evaluated
 		#The value is the associated Ackermann index array(s) [[m,n]]
 		@pending_results_hash = {}
@@ -90,7 +90,7 @@ class Ackermann
 		total_array = [m, n]
 		#While dimension of nested arrays is >= 0 (i.e. not an integer), continue loop
 		while dimension_of_nested_array >= 0 do
-			# 1. Set working array containing only integers to be evaluated
+			# 1. Set working array (Ackerman indexes) to be the inner most nested array 
 			working_array = select_nested_array(total_array, dimension_of_nested_array)
 			# 2. Check if current Ackermann indexes have been solved before; if not, mark indexes as pending final integer result
 			if (!is_previous_result?(working_array))
@@ -98,7 +98,7 @@ class Ackermann
 				store_new_pending_result([working_array[0],working_array[1]], dimension_of_nested_array)
 			end
 			
-			# 3. Calculate result using following order
+			# 3. Calculate result using the following order
 			# 3a. Return previously calculated result if stored in @@previous_results_hash
 			if (is_previous_result?(working_array) && return_previous_result(working_array)!=nil)
 				return_result = return_previous_result(working_array)
@@ -110,7 +110,7 @@ class Ackermann
 				return_result = ackermann_function(working_array[0], working_array[1])
 			end
 			
-			# 4. Check if result has become too large and has been defined as "infinity" to prevent infinit loop
+			# 4. Check if result has become too large and has been defined as "infinity" to prevent infinite loop
 			if is_infinity?(return_result)
 				# Clear pending results to clean up current iteration
 				@pending_results_hash.clear
@@ -137,7 +137,7 @@ class Ackermann
 				
 				dimension_of_nested_array -= 1
 				
-				#Check if collapsed integer result still is contained within a higher level array or if all arrays have collapsed to a single integer
+				#Check if collapsed integer result is contained within a higher level array or if all arrays have collapsed to a single integer
 				if dimension_of_nested_array >= 0 
 					#Adjust working array one level up from current position to select outer array containing the current solution
 					working_array = select_nested_array(total_array, dimension_of_nested_array)
@@ -205,13 +205,13 @@ class Ackermann
 		return return_array_reference
 	end
 
-	#The is_special_case? method checks if a pair of Ackermann integer indexes (m,n) has
-	#a previously calculated final integer result in the class variable @@special_cases_hash
+	#The is_special_case? method checks if a pair of Ackermann integer indexes (m,n) falls within the 
+	#special case where m is a key 0-3 in the class variable @@special_cases_hash
 	#
 	#*Args*	  :
 	#- +ackermann_index_array+ -> array containing ackermann integer indexes [m,n]
 	#*Returns* :
-	#- true if class variable @@special_cases_hash contains the supplied Ackermann indexes
+	#- true if class variable @@special_cases_hash contains the supplied Ackermann m index
 	#- false otherwise 
 	#*Raises*  :
 	#- This method contains no additional error checks
@@ -239,7 +239,7 @@ class Ackermann
 		return eval(special_case_function)
 	end 
 
-	#The is_pending_result method checks if a pair of Ackermann integer indexes (m,n) is 
+	#The is_pending_result method checks if a pair of Ackermann integer indexes (m,n)
 	#has been added to the instance variable @pending_results_hash
 	#
 	#*Args*	  :
@@ -320,7 +320,7 @@ class Ackermann
 		return @@previous_results_hash.has_key?(ackermann_index_array)
 	end
 
-	#The return_previous_result method returns a previous solved saved result from the 
+	#The return_previous_result method returns a previously solved saved result from the 
 	#@@previous_results_hash variable based on an array of ackermann indexes
 	#
 	#*Args*	  :

@@ -141,10 +141,10 @@ primitive recursive.”</p>
 <p>without using recursive function calls“</p>
 </li></ul>
 
-<p>This version avoids recursive function calls by using a nested
-multidimensional arrays. Each loop works on the inner most nested 2D array
-as the indexes for the <a href="Ackermann.html">Ackermann</a> function 
-until the entire nested array collapses into a single Fixnum or Bignum
+<p>This version avoids recursive function calls by using nested
+multidimensional arrays. Each loop works on the inner most nested array as
+the indexes for the <a href="Ackermann.html">Ackermann</a> function  until
+the entire overall nested array collapses into a single Fixnum or Bignum
 integer. For example:</p>
 <ul><li>
 <p>A(1,1) can be written as [1,1]</p>
@@ -155,10 +155,10 @@ integer. For example:</p>
 <p>[1,1]      #This is defined to have nested array dimension of 0</p>
 </li><li>
 <p>[0,[1,0]] #Note this nested array is defined to have nested dimension of 1;
-the working array [1,0] would be evaluted next</p>
+the working array [1,0] would be evaluated next</p>
 </li><li>
 <p>[0,[0,1]] #This still has a nested dimension of 1; the working array [0,1]
-would be evaluted next</p>
+would be evaluated next</p>
 </li><li>
 <p>[0,2]</p>
 </li><li>
@@ -166,16 +166,17 @@ would be evaluted next</p>
 </li></ol>
 
 <p>Avoiding the use of recursive function calls is benefical as this prevents
-SystemStackError of the stack level becoming too deep In addition, the
+SystemStackError of the stack level becoming too deep. In addition, the
 avoidance of recrusive function calls could all this method to be modified
 to allow for pausing a calculation and returning later</p>
 
 <p>By saving previously calculated <a href="Ackermann.html">Ackermann</a>
 results, this will optimize future attempts to calculate the same results
-by only requiring a single hash lookup in a single interation</p>
+by only requiring a single hash lookup in a single iteration</p>
 
-<p>Since there are special cases where n = 0 and m is 0-3, this also optimizes
-these <a href="Ackermann.html">Ackermann</a> indexes and avoides uncessasry
+<p>This class also contains special cases when m is 0-3 and uses a simplified
+formula when this is encountered; this also optimizes these <a
+href="Ackermann.html">Ackermann</a> indexes and avoids unnecessary
 iterations</p>
 <dl class="rdoc-list note-list"><dt>Author
 <dd>
@@ -222,8 +223,8 @@ iterations</p>
 
         <div class="method-description">
           
-          <p>The initialize method creates an instance hash to store pending solved
-ackermann results called @pending_results_hash</p>
+          <p>The initialize method creates an instance hash to store pending ackermann
+solutions called @pending_results_hash</p>
 
 <p><strong>Args</strong>          :</p>
 <ul><li>
@@ -246,7 +247,7 @@ ackermann results called @pending_results_hash</p>
           <div class="method-source-code" id="new-source">
             <pre><span class="ruby-comment"># File ackermann.rb, line 69</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize</span>
-        <span class="ruby-comment">#Instance variable that stores pending Ackermann indexes [m,n] for new Ackermann(m,n) values</span>
+        <span class="ruby-comment">#Instance variable that stores pending Ackermann indexes [m,n] for new Ackermann(m,n) solutions</span>
         <span class="ruby-comment">#The key is the specified dimensional level of the overall Ackermann nested array being evaluated</span>
         <span class="ruby-comment">#The value is the associated Ackermann index array(s) [[m,n]]</span>
         <span class="ruby-ivar">@pending_results_hash</span> = {}
@@ -457,7 +458,7 @@ A(1,1) would result in 3.</p>
         <span class="ruby-identifier">total_array</span> = [<span class="ruby-identifier">m</span>, <span class="ruby-identifier">n</span>]
         <span class="ruby-comment">#While dimension of nested arrays is &gt;= 0 (i.e. not an integer), continue loop</span>
         <span class="ruby-keyword">while</span> <span class="ruby-identifier">dimension_of_nested_array</span> <span class="ruby-operator">&gt;=</span> <span class="ruby-value">0</span> <span class="ruby-keyword">do</span>
-                <span class="ruby-comment"># 1. Set working array containing only integers to be evaluated</span>
+                <span class="ruby-comment"># 1. Set working array (Ackerman indexes) to be the inner most nested array </span>
                 <span class="ruby-identifier">working_array</span> = <span class="ruby-identifier">select_nested_array</span>(<span class="ruby-identifier">total_array</span>, <span class="ruby-identifier">dimension_of_nested_array</span>)
                 <span class="ruby-comment"># 2. Check if current Ackermann indexes have been solved before; if not, mark indexes as pending final integer result</span>
                 <span class="ruby-keyword">if</span> (<span class="ruby-operator">!</span><span class="ruby-identifier">is_previous_result?</span>(<span class="ruby-identifier">working_array</span>))
@@ -465,7 +466,7 @@ A(1,1) would result in 3.</p>
                         <span class="ruby-identifier">store_new_pending_result</span>([<span class="ruby-identifier">working_array</span>[<span class="ruby-value">0</span>],<span class="ruby-identifier">working_array</span>[<span class="ruby-value">1</span>]], <span class="ruby-identifier">dimension_of_nested_array</span>)
                 <span class="ruby-keyword">end</span>
                 
-                <span class="ruby-comment"># 3. Calculate result using following order</span>
+                <span class="ruby-comment"># 3. Calculate result using the following order</span>
                 <span class="ruby-comment"># 3a. Return previously calculated result if stored in @@previous_results_hash</span>
                 <span class="ruby-keyword">if</span> (<span class="ruby-identifier">is_previous_result?</span>(<span class="ruby-identifier">working_array</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">return_previous_result</span>(<span class="ruby-identifier">working_array</span>)<span class="ruby-operator">!=</span><span class="ruby-keyword">nil</span>)
                         <span class="ruby-identifier">return_result</span> = <span class="ruby-identifier">return_previous_result</span>(<span class="ruby-identifier">working_array</span>)
@@ -477,7 +478,7 @@ A(1,1) would result in 3.</p>
                         <span class="ruby-identifier">return_result</span> = <span class="ruby-identifier">ackermann_function</span>(<span class="ruby-identifier">working_array</span>[<span class="ruby-value">0</span>], <span class="ruby-identifier">working_array</span>[<span class="ruby-value">1</span>])
                 <span class="ruby-keyword">end</span>
                 
-                <span class="ruby-comment"># 4. Check if result has become too large and has been defined as &quot;infinity&quot; to prevent infinit loop</span>
+                <span class="ruby-comment"># 4. Check if result has become too large and has been defined as &quot;infinity&quot; to prevent infinite loop</span>
                 <span class="ruby-keyword">if</span> <span class="ruby-identifier">is_infinity?</span>(<span class="ruby-identifier">return_result</span>)
                         <span class="ruby-comment"># Clear pending results to clean up current iteration</span>
                         <span class="ruby-ivar">@pending_results_hash</span>.<span class="ruby-identifier">clear</span>
@@ -504,7 +505,7 @@ A(1,1) would result in 3.</p>
                         
                         <span class="ruby-identifier">dimension_of_nested_array</span> <span class="ruby-operator">-=</span> <span class="ruby-value">1</span>
                         
-                        <span class="ruby-comment">#Check if collapsed integer result still is contained within a higher level array or if all arrays have collapsed to a single integer</span>
+                        <span class="ruby-comment">#Check if collapsed integer result is contained within a higher level array or if all arrays have collapsed to a single integer</span>
                         <span class="ruby-keyword">if</span> <span class="ruby-identifier">dimension_of_nested_array</span> <span class="ruby-operator">&gt;=</span> <span class="ruby-value">0</span> 
                                 <span class="ruby-comment">#Adjust working array one level up from current position to select outer array containing the current solution</span>
                                 <span class="ruby-identifier">working_array</span> = <span class="ruby-identifier">select_nested_array</span>(<span class="ruby-identifier">total_array</span>, <span class="ruby-identifier">dimension_of_nested_array</span>)
@@ -705,8 +706,8 @@ href="Ackermann.html">Ackermann</a> nested array</p>
         <div class="method-description">
           
           <p>The is_pending_result method checks if a pair of <a
-href="Ackermann.html">Ackermann</a> integer indexes (m,n) is  has been
-added to the instance variable @pending_results_hash</p>
+href="Ackermann.html">Ackermann</a> integer indexes (m,n) has been added to
+the instance variable @pending_results_hash</p>
 
 <p><strong>Args</strong>          :</p>
 <ul><li>
@@ -814,8 +815,9 @@ indexes [m,n]</p>
         <div class="method-description">
           
           <p>The is_special_case? method checks if a pair of <a
-href="Ackermann.html">Ackermann</a> integer indexes (m,n) has a previously
-calculated final integer result in the class variable @@special_cases_hash</p>
+href="Ackermann.html">Ackermann</a> integer indexes (m,n) falls within the 
+special case where m is a key 0-3 in the class variable
+@@special_cases_hash</p>
 
 <p><strong>Args</strong>          :</p>
 <ul><li>
@@ -826,7 +828,7 @@ indexes [m,n]</p>
 <p><strong>Returns</strong> :</p>
 <ul><li>
 <p>true if class variable @@special_cases_hash contains the supplied <a
-href="Ackermann.html">Ackermann</a> indexes</p>
+href="Ackermann.html">Ackermann</a> m index</p>
 </li><li>
 <p>false otherwise</p>
 </li></ul>
@@ -904,7 +906,7 @@ method allows access to the class variable of the same name</p>
           
           <p>The <a
 href="Ackermann.html#method-i-return_previous_result">#return_previous_result</a>
-method returns a previous solved saved result from the 
+method returns a previously solved saved result from the 
 @@previous_results_hash variable based on an array of ackermann indexes</p>
 
 <p><strong>Args</strong>          :</p>
