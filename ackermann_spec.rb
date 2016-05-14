@@ -1,3 +1,6 @@
+require 'simplecov'
+SimpleCov.start
+
 require './ackermann'
 
 describe Ackermann do
